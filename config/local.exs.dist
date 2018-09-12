@@ -1,0 +1,15 @@
+use Mix.Config
+
+config :discord_oauth2_server,
+  client_id: "",
+  client_secret: "",
+  redirect_uri: ""
+
+config :discord_oauth2_server, db: [
+  pool: DBConnection.Poolboy,
+  pool_size: 10,
+  hostname: "",
+  database: "",
+  username: "",
+  password: ""
+]
