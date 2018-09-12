@@ -5,26 +5,31 @@ defmodule DiscordOauth2Server.Application do
 
   use Application
 
+  defp poolboy_config do
+    [
+      {:name, {:local, :worker}},
+      {:worker_module, PoolboyApp.Worker},
+      {:size, 5},
+      {:max_overflow, 2}
+    ]
+  end
+
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
     cowboy_options = [
-      port: 8085
+      port: 8086
     ]
-
+    Postgrex.Types.define(DiscordOauth2Server.PostgrexTypes, [], json: Jason)
     postgrex_options = Keyword.put(Application.get_env(:discord_oauth2_server, :db), :name, DB)
 
-
-    # Define workers and child supervisors to be supervised
     children = [
       Plug.Adapters.Cowboy.child_spec(:http, DiscordOauth2Server.Router, [], cowboy_options),
-      Postgrex.child_spec(postgrex_options)
-      # Starts a worker by calling: DiscordOauth2Server.Worker.start_link(arg1, arg2, arg3)
-      # worker(DiscordOauth2Server.Worker, [arg1, arg2, arg3]),
+      Postgrex.child_spec(postgrex_options),
+      worker(DiscordOauth2Server.TokenRequestCache, [])
+
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: DiscordOauth2Server.Supervisor]
     Supervisor.start_link(children, opts)
   end
