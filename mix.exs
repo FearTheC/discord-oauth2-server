@@ -31,12 +31,10 @@ defmodule DiscordOauth2Server.Mixfile do
   defp deps do
     [
       {:postgrex, "~> 0.13"},
-      {:hackney, "~> 1.9.0"},
       {:cowboy, "~> 1.0.0"},
       {:plug, "~> 1.5"},
       {:poison, "~> 3.1"},
-      {:httpoison, "~> 1.0"},
-      {:oauth2, "~> 0.9.3"}
+      {:httpoison, "~> 1.0"}
     ]
   end
 end

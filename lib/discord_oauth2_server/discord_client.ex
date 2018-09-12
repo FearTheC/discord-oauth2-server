@@ -11,18 +11,6 @@ defmodule DiscordOauth2Server.DiscordClient do
   @client_secret Application.get_env :discord_oauth2_server, :client_secret
 
 
-  def client do
-    OAuth2.Client.new([
-      strategy: OAuth2.Strategy.AuthCode,
-      client_id: @client_id,
-      client_secret: @client_secret,
-      authorize_url: @auth_url,
-      token_url: @token_uri,
-      redirect_uri: @redirect_uri
-    ])
-  end
-
-
   def get_auth_url do
     length = 24
     state = :crypto.strong_rand_bytes(length)
@@ -34,20 +22,21 @@ defmodule DiscordOauth2Server.DiscordClient do
 
 
   def get_token(code) do
-    headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
+    headers = %{"content-type" => "application/x-www-form-urlencoded"}
+    body = {:form, [
+      client_id: @client_id,
+      client_secret: @client_secret,
+      redirect_uri: @redirect_uri,
+      code: code,
+      scope: "identify email",
+      grant_type: "authorization_code"
+    ]}
 
-    query = client
-    |> put_param(:client_id, @client_id)
-    |> put_param(:client_secret, client.client_secret)
-    |> put_param(:redirect_uri, client.redirect_uri)
-    |> put_param(:code, code)
-    |> put_param(:scope, "identify email")
-    |> put_param(:grant_type, "authorization_code")
-    |> put_header("accept", "application/x-www-form-urlencoded")
+    {:ok, %HTTPoison.Response{body: token}} = HTTPoison.post(@token_uri, body, headers, [])
 
-    {:ok, res} = OAuth2.Client.get_token(query)
+    token = Poison.decode! token
 
-    res.token
+    for {key, val} <- token, into: %{}, do: {String.to_atom(key), val}
   end
 
 
