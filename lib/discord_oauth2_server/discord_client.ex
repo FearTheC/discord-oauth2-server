@@ -1,6 +1,4 @@
 defmodule DiscordOauth2Server.DiscordClient do
-  require OAuth2
-  use OAuth2.Strategy
 
   @base_url "https://discordapp.com/api"
   @token_uri @base_url <> "/oauth2/token"
@@ -23,7 +21,7 @@ defmodule DiscordOauth2Server.DiscordClient do
 
   def get_token(code) do
     headers = %{"content-type" => "application/x-www-form-urlencoded"}
-    body = {:form, [
+    form = {:form, [
       client_id: @client_id,
       client_secret: @client_secret,
       redirect_uri: @redirect_uri,
@@ -32,11 +30,11 @@ defmodule DiscordOauth2Server.DiscordClient do
       grant_type: "authorization_code"
     ]}
 
-    {:ok, %HTTPoison.Response{body: token}} = HTTPoison.post(@token_uri, body, headers, [])
+    {:ok, %HTTPoison.Response{body: body}} = HTTPoison.post(@token_uri, form, headers, [])
 
-    token = Poison.decode! token
+    body = Poison.decode! body
+    for {key, val} <- body, into: %{}, do: {String.to_atom(key), val}
 
-    for {key, val} <- token, into: %{}, do: {String.to_atom(key), val}
   end
 
 
