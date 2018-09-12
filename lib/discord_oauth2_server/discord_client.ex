@@ -9,12 +9,30 @@ defmodule DiscordOauth2Server.DiscordClient do
   @client_secret Application.get_env :discord_oauth2_server, :client_secret
 
 
-  def get_auth_url do
+  def create_jwt user, referer do
+    {:ok, jwt, claims} = TokenModule.encode_and_sign(user, [aud: referer], [kj: "lkjklj"])
+    {:ok, jwt, claims}
+  end
+
+
+  def get_referer conn do
+    case List.keyfind(conn.req_headers, "referer", 0) do
+      {"referer", referer} ->
+        %URI{authority: referer_domain} = URI.parse referer
+        {:ok, referer, referer_domain}
+      nil -> {:error, "No referer found."}
+    end
+  end
+
+
+  def create_state do
     length = 24
     state = :crypto.strong_rand_bytes(length)
-    |> Base.url_encode64
-    |> binary_part(0, length)
+      |> Base.url_encode64
+      |> binary_part(0, length)
+  end
 
+  def get_auth_url state do
     @auth_url <> "?client_id=" <> @client_id <> "&redirect_uri="<>@redirect_uri<>"&response_type=code&scope=identify+email&state="<>state
   end
 

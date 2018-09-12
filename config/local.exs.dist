@@ -6,6 +6,7 @@ config :discord_oauth2_server,
   redirect_uri: ""
 
 config :discord_oauth2_server, db: [
+  types: DiscordOauth2Server.PostgrexTypes,
   pool: DBConnection.Poolboy,
   pool_size: 10,
   hostname: "",
@@ -13,3 +14,10 @@ config :discord_oauth2_server, db: [
   username: "",
   password: ""
 ]
+
+config :discord_oauth2_server, DiscordOauth2Server.TokenModule,
+   issuer: "",
+   expiration: ,
+   secret_key: "Use 'mix guardian.gen.secret' to generate a secret to be put right here.",
+   serializer: DiscordOauth2Server.GuardianSerializer,
+   token_module: DiscordOauth2Server.TokenModule
