@@ -12,9 +12,13 @@ defmodule DiscordOauth2Server.Application do
       port: 8085
     ]
 
+    postgrex_options = Keyword.put(Application.get_env(:discord_oauth2_server, :db), :name, DB)
+
+
     # Define workers and child supervisors to be supervised
     children = [
-      Plug.Adapters.Cowboy.child_spec(:http, DiscordOauth2Server.Router, [], cowboy_options)
+      Plug.Adapters.Cowboy.child_spec(:http, DiscordOauth2Server.Router, [], cowboy_options),
+      Postgrex.child_spec(postgrex_options)
       # Starts a worker by calling: DiscordOauth2Server.Worker.start_link(arg1, arg2, arg3)
       # worker(DiscordOauth2Server.Worker, [arg1, arg2, arg3]),
     ]
