@@ -20,10 +20,16 @@ defmodule DiscordOauth2Server.Router do
     state = params["state"]
     code = params["code"]
 
-    token = DiscordOauth2Server.DiscordClient.get_token code
-    body = DiscordOauth2Server.DiscordClient.get_user token.access_token
+    body =
+      case DiscordOauth2Server.DiscordClient.get_token code do
+        %{access_token: access_token, refresh_token: refresh_token} ->
+          DiscordOauth2Server.DiscordClient.get_user access_token
+        %{error: reason} ->
+          {:ok, json} = Poison.encode(%{error: reason})
+          json
+      end
 
-    send_resp(conn, 200, "user: " <> body)
+    send_resp(conn, 200, body)
   end
 
 
@@ -34,4 +40,6 @@ defmodule DiscordOauth2Server.Router do
   def start_link do
     Plug.Adapters.Cowboy.http(Plugger.Router, [])
   end
+
+
 end
