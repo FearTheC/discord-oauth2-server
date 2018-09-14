@@ -16,8 +16,10 @@ config :discord_oauth2_server, db: [
 ]
 
 config :discord_oauth2_server, DiscordOauth2Server.TokenModule,
-   issuer: "",
-   expiration: ,
-   secret_key: "Use 'mix guardian.gen.secret' to generate a secret to be put right here.",
-   serializer: DiscordOauth2Server.GuardianSerializer,
-   token_module: DiscordOauth2Server.TokenModule
+ allowed_algos: ["ES512"],
+ verify_module: Guardian.JWT,
+ issuer: "",
+ ttl: { 1, :days },
+ allowed_drift: 2000,
+ verify_issuer: true,
+ secret_key: ""

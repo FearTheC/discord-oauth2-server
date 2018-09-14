@@ -19,9 +19,13 @@ defmodule DiscordOauth2Server.Router do
         |> put_resp_header("location", DiscordOauth2Server.DiscordClient.get_auth_url state)
         |> send_resp(301, "Redirection")
 
-      {:error, _} ->
+      {:error, err} ->
+        json = %{status: :error, error: err}
+          |> Jason.encode!
+
         conn
-        |> send_resp(400, "ERROR")
+        |> put_resp_header("content-type", "application/json")
+        |> send_resp(400, json)
     end
   end
 
@@ -32,16 +36,17 @@ defmodule DiscordOauth2Server.Router do
     state = params["state"]
     code = params["code"]
 
-    referer = TokenRequestCache.lookup_referer! state
+    referer = TokenRequestCache.lookup_referer!(state)
     %URI{authority: referer_domain, scheme: referer_scheme} = URI.parse referer
 
     case DiscordOauth2Server.DiscordClient.get_token code do
 
       %{access_token: access_token, refresh_token: _} ->
-        {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user access_token
+        TokenRequestCache.clear_state(state)
+        {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user(access_token)
         {user_id, _} = Integer.parse user_id
         user = DiscordOauth2Server.Database.fetch_guild_user(user_id, referer_domain)
-        {:ok, token, _} = DiscordClient.create_jwt user, referer_domain
+        {:ok, token, _} = DiscordClient.create_jwt(user, referer_domain)
 
         redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
 
@@ -51,14 +56,39 @@ defmodule DiscordOauth2Server.Router do
 
       %{error: reason} ->
         %{error: reason}
-        send_resp(conn, 500, "Server Error")
+        send_resp(conn, 401, "Server Error")
     end
   end
 
 
-  match _ do
-      send_resp(conn, 404, "not founds")
+  match "public_keys" do
+    %{"crv" => crv, "kty" => kty, "x"=>x, "y"=>y} = Application.get_env(:discord_oauth2_server, DiscordOauth2Server.TokenModule)[:secret_key]
+    json = %{status: :ok, keys: %{crv: crv, kty: kty, x: x, y: y}}
+    |> Jason.encode!
+
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> send_resp(200, json)
   end
+
+
+  match "/ping" do
+    timestamp =
+      :os.system_time(:seconds)
+      |> Integer.to_string
+    json = %{status: :ok, timestamp: timestamp}
+      |> Jason.encode!
+
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> send_resp(200, json)
+  end
+
+
+  match _ do
+    send_resp(conn, 404, "not founds")
+  end
+
 
   def start_link do
     Plug.Adapters.Cowboy.http(Plugger.Router, [])

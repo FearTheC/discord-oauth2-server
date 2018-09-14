@@ -38,7 +38,6 @@ defmodule DiscordOauth2Server.Mixfile do
       {:poolboy, "~> 1.5"},
       {:jason, "~> 1.1"},
       {:joken, "~> 2.0-rc0"},
-      {:jose, "~> 1.8"},
       {:guardian, "~> 1.1"}
     ]
   end
