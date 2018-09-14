@@ -4,14 +4,15 @@ defmodule DiscordOauth2Server.TokenModule do
   alias DiscordOauth2Server.User
   alias DiscordOauth2Server.Database
 
-  @config Application.get_env(:discord_oauth2_server, DiscordOauth2Server.TokenModule)
+  @config Application.get_env(:discord_oauth2_server, __MODULE__)
 
-  def subject_for_token(%User{id: id} = user, _claims) do
+
+  def subject_for_token(%User{id: id}, _claims) do
     {:ok, "User:#{id}"}
   end
 
-
   def subject_for_token(_, _), do: {:error, :unhandled_resource_type}
+
 
 
   def resource_from_claims(%{"sub" => "User:" <> id}) do
@@ -23,7 +24,7 @@ defmodule DiscordOauth2Server.TokenModule do
 
 
   def create_token(mod, claims, options) do
-    Guardian.Token.Jwt.create_token mod, claims, options
+    {:ok, Guardian.Token.Jwt.create_token(mod, claims, options)}
   end
 
 
@@ -33,16 +34,17 @@ defmodule DiscordOauth2Server.TokenModule do
   end
 
 
-  def build_claims(mod, resource, sub, claims, options) do
-    {:ok, merge_claims(claims, sub)}
+  def build_claims(_mod, resource, sub, claims, _options) do
+
+    {:ok, merge_claims(claims, sub, resource)}
   end
 
 
-  def merge_claims(claims, sub) do
+  def merge_claims(claims, sub, resource) do
     claims
-      |> Map.merge(%{iss: @config[:issuer]})
-      |> Map.merge(%{sub: sub})
-      |> Map.merge(%{exp: @config[:expiration]})
+    |> Map.merge(%{user: resource})
+    |> Map.merge(%{iss: @config[:issuer]})
+    |> Map.merge(%{sub: sub})
   end
 
 end

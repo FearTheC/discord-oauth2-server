@@ -12,12 +12,16 @@ defmodule DiscordOauth2Server.TokenRequestCache do
   def lookup_referer!(state) do
     case lookup_referer state do
       {:found, result} -> result
-      {:not_found} -> raise TokenRequestCacheError, message: "Not Found"
+      {:not_found} -> raise "Request token not found"
     end
   end
 
   def set_state_referer(state, referer) do
     GenServer.call(__MODULE__, {:set, state, referer})
+  end
+
+  def clear_state(state) do
+    GenServer.cast(__MODULE__, {:clear_state, state})
   end
 
   def start_link opts \\ [] do
@@ -34,9 +38,14 @@ defmodule DiscordOauth2Server.TokenRequestCache do
     {:reply, state, referer}
   end
 
-  def handle_call({:get, state}, pid, _) do
+  def handle_call({:get, state}, _pid, _) do
     result = :ets.lookup(:referer_lookup, state)
     {:reply, result, state}
+  end
+
+  def handle_cast({:clear_state, state}, _state) do
+    :ets.delete(:referer_lookup, state)
+    {:noreply, state}
   end
 
 end

@@ -1,5 +1,6 @@
 defmodule DiscordOauth2Server.DiscordClient do
   alias DiscordOauth2Server.TokenModule
+  alias DiscordOauth2Server.TokenCache
 
   @base_url "https://discordapp.com/api"
   @token_uri @base_url <> "/oauth2/token"
@@ -11,7 +12,8 @@ defmodule DiscordOauth2Server.DiscordClient do
 
 
   def create_jwt user, referer do
-    {:ok, jwt, claims} = TokenModule.encode_and_sign(user, [aud: referer], [kj: "lkjklj"])
+    {:ok, jwt, claims} = TokenModule.encode_and_sign(user, [aud: referer])
+    TokenCache.set_new_token(jwt, claims["jti"])
     {:ok, jwt, claims}
   end
 
@@ -21,14 +23,14 @@ defmodule DiscordOauth2Server.DiscordClient do
       {"referer", referer} ->
         %URI{authority: referer_domain} = URI.parse referer
         {:ok, referer, referer_domain}
-      nil -> {:error, "No referer found."}
+      nil -> {:error, "No referer provided."}
     end
   end
 
 
   def create_state do
     length = 24
-    state = :crypto.strong_rand_bytes(length)
+    :crypto.strong_rand_bytes(length)
       |> Base.url_encode64
       |> binary_part(0, length)
   end
@@ -61,7 +63,7 @@ defmodule DiscordOauth2Server.DiscordClient do
     headers = [
       {"Authorization", "Bearer " <> access_token}
     ]
-    %HTTPoison.Response{status_code: status, body: body} = HTTPoison.get!(@user_url, headers)
+    %HTTPoison.Response{status_code: _status, body: body} = HTTPoison.get!(@user_url, headers)
 
     body
   end

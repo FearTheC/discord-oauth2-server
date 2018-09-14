@@ -11,7 +11,7 @@ defmodule DiscordOauth2Server.Application do
     import Supervisor.Spec, warn: false
 
     cowboy_options = [
-      port: 8086
+      port: 8085
     ]
     Postgrex.Types.define(DiscordOauth2Server.PostgrexTypes, [], json: Jason)
     postgrex_options = Keyword.put(Application.get_env(:discord_oauth2_server, :db), :name, DB)
@@ -19,7 +19,8 @@ defmodule DiscordOauth2Server.Application do
     children = [
       Plug.Adapters.Cowboy.child_spec(:http, DiscordOauth2Server.Router, [], cowboy_options),
       Postgrex.child_spec(postgrex_options),
-      worker(DiscordOauth2Server.TokenRequestCache, [])
+      worker(DiscordOauth2Server.TokenRequestCache, []),
+      worker(DiscordOauth2Server.TokenCache, [])
 
     ]
 

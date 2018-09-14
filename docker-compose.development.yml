@@ -23,6 +23,7 @@ services:
       traefik.port: 8085
     networks:
       ftcbot_dev:
+      traefik:
 
 networks:
   ftcbot_dev:
