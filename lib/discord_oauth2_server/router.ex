@@ -2,9 +2,6 @@ defmodule DiscordOauth2Server.Router do
   use Plug.Router
   use Plug.Debugger
 
-  import Guardian
-  alias DiscordOauth2Server.User
-  alias DiscordOauth2Server.TokenModule
   alias DiscordOauth2Server.TokenRequestCache
   alias DiscordOauth2Server.DiscordClient
 
@@ -14,7 +11,7 @@ defmodule DiscordOauth2Server.Router do
 
   get "/login" do
     case DiscordClient.get_referer conn do
-      {:ok, referer, referer_domain} ->
+      {:ok, referer, _} ->
         state = DiscordClient.create_state
         TokenRequestCache.set_state_referer(state, referer)
 
@@ -38,27 +35,24 @@ defmodule DiscordOauth2Server.Router do
     referer = TokenRequestCache.lookup_referer! state
     %URI{authority: referer_domain, scheme: referer_scheme} = URI.parse referer
 
-    body =
-      case DiscordOauth2Server.DiscordClient.get_token code do
+    case DiscordOauth2Server.DiscordClient.get_token code do
 
-        %{access_token: access_token, refresh_token: refresh_token} ->
-          {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user access_token
-          {user_id, _} = Integer.parse user_id
+      %{access_token: access_token, refresh_token: _} ->
+        {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user access_token
+        {user_id, _} = Integer.parse user_id
+        user = DiscordOauth2Server.Database.fetch_guild_user(user_id, referer_domain)
+        {:ok, token, _} = DiscordClient.create_jwt user, referer_domain
 
-          user = DiscordOauth2Server.Database.fetch_guild_user(user_id, referer_domain)
+        redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
 
-          {:ok, token, claims} = DiscordClient.create_jwt user, referer_domain
-          # %{data: %{user: user, token: token}}
+        conn
+        |> put_resp_header("location", redirect_uri)
+        |> send_resp(301, "Redirection")
 
-        %{error: reason} ->
-          %{error: reason}
-      end
-
-    redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
-
-    conn
-    |> put_resp_header("location", redirect_uri)
-    |> send_resp(301, "Redirection")
+      %{error: reason} ->
+        %{error: reason}
+        send_resp(conn, 500, "Server Error")
+    end
   end
 
 

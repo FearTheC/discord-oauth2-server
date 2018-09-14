@@ -5,14 +5,7 @@ defmodule DiscordOauth2Server.Application do
 
   use Application
 
-  defp poolboy_config do
-    [
-      {:name, {:local, :worker}},
-      {:worker_module, PoolboyApp.Worker},
-      {:size, 5},
-      {:max_overflow, 2}
-    ]
-  end
+
 
   def start(_type, _args) do
     import Supervisor.Spec, warn: false

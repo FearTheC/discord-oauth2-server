@@ -1,4 +1,5 @@
 defmodule DiscordOauth2Server.DiscordClient do
+  alias DiscordOauth2Server.TokenModule
 
   @base_url "https://discordapp.com/api"
   @token_uri @base_url <> "/oauth2/token"
