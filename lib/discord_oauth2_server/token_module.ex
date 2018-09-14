@@ -39,11 +39,10 @@ defmodule DiscordOauth2Server.TokenModule do
 
 
   def merge_claims(claims, sub) do
-    IO.inspect @config[:expiration]
     claims
-      |> Map.merge %{iss: @config[:issuer]}
-      |> Map.merge %{sub: sub}
-      |> Map.merge %{exp: @config[:expiration]}
+      |> Map.merge(%{iss: @config[:issuer]})
+      |> Map.merge(%{sub: sub})
+      |> Map.merge(%{exp: @config[:expiration]})
   end
 
 end
