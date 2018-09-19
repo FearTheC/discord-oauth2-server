@@ -2,6 +2,8 @@
 
 Elixir server using [Discord OAuth2](https://discordapp.com/developers/docs/topics/oauth2) service and an existing database to provide JWS token.
 
+<img src="https://docs.fearthec.io/images/ftc-logo.png" alt="Fear The C{ode}" width="400">
+
 It acts as a proxy. From the client side, simply redirects to the `/login` endpoint, which will then 
 
 ![Discord OAuth2 Server - Sequence Diagram](https://lh6.googleusercontent.com/rPQ6P923f9QovYJ4b0k_HAKPEuMoH76tGkBEam3Zm3hkZZ6Srj1F4LaE-dVm1Ier4nP0X-Y1C2pmSg=w1383-h655)
@@ -44,3 +46,5 @@ As of now, the server provides ECDSA-like signed JWS. A little more development 
   "status": "ok"
 }
 ```
+
+![FTC Bot system diagram](https://docs.fearthec.io/images/ftc-bot-system.png)
