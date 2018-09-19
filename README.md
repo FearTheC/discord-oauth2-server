@@ -1,19 +1,46 @@
 # DiscordOauth2Server
 
-**TODO: Add description**
+Elixir server using [Discord OAuth2](https://discordapp.com/developers/docs/topics/oauth2) service and an existing database to provide JWS token.
 
-## Installation
+It acts as a proxy. From the client side, simply redirects to the `/login` endpoint, which will then 
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `discord_oauth2_server` to your list of dependencies in `mix.exs`:
+![Discord OAuth2 Server - Sequence Diagram](https://lh6.googleusercontent.com/rPQ6P923f9QovYJ4b0k_HAKPEuMoH76tGkBEam3Zm3hkZZ6Srj1F4LaE-dVm1Ier4nP0X-Y1C2pmSg=w1383-h655)
 
-```elixir
-def deps do
-  [{:discord_oauth2_server, "~> 0.1.0"}]
-end
+## Dependencies
+
+### Elixir platform
+- Elixir 1.7.3
+- Erlang/OTP 21
+
+### Supported Databases
+Only PostgreSQL with [Postgrex](https://github.com/elixir-ecto/postgrex) is supported at this time, as no abstractions has been implemented (yet) to easily swap between DBs and drivers.
+
+### Supported encryption
+
+As of now, the server provides ECDSA-like signed JWS. A little more development may be necessary to support more algorithms.
+
+## Quick Start
+
+
+## Exemples
+
+### /ping
+```json
+{
+  "status": "ok",
+  "timestamp": "1537360546"
+}
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/discord_oauth2_server](https://hexdocs.pm/discord_oauth2_server).
-
+### /public_keys
+```json
+{
+  "keys": {
+    "crv": "P-521",
+    "kty": "EC",
+    "x": "ABeULuyYwEDVAkJtgNvgeG0v6rNtKDOYkKUMqjJyR-aCfjbkPpsl2MZXVdsjNR31oGbCB4gT5qpgjiXgqqqT5BRC",
+    "y": "AdDA3RxRlGzy0chCTKaWQffWx9xBDrOPKf_TgpzlfdJw9QykNCguvAQeE7ZrzwPcAziRAQcVmorzPpGioR96VsY6"
+  },
+  "status": "ok"
+}
+```
