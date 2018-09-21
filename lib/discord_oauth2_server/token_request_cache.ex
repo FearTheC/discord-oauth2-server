@@ -5,7 +5,7 @@ defmodule DiscordOauth2Server.TokenRequestCache do
   def lookup_referer(state) do
     case GenServer.call(__MODULE__, {:get, state}) do
       [] -> {:not_found}
-      [{state, result}] -> {:found, result}
+      [{state, result}] -> {:found, result, state}
     end
   end
 
@@ -24,7 +24,7 @@ defmodule DiscordOauth2Server.TokenRequestCache do
     GenServer.cast(__MODULE__, {:clear_state, state})
   end
 
-  def start_link opts \\ [] do
+  def start_link _opts \\ [] do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
@@ -33,7 +33,7 @@ defmodule DiscordOauth2Server.TokenRequestCache do
     {:ok, nil}
   end
 
-  def handle_call({:set, state, referer}, pid, _) do
+  def handle_call({:set, state, referer}, _pid, _) do
     true = :ets.insert(:referer_lookup, {state, referer})
     {:reply, state, referer}
   end

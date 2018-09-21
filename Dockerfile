@@ -13,7 +13,7 @@ RUN mix local.hex --force && \
     mix release
 
 
-FROM alpine
+FROM elixir:1.7.3-alpine
 
 RUN apk --update --no-cache add openssl bash
 

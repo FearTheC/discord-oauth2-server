@@ -4,6 +4,8 @@ defmodule DiscordOauth2Server.Router do
 
   alias DiscordOauth2Server.TokenRequestCache
   alias DiscordOauth2Server.DiscordClient
+  alias DiscordOauth2Server.TokenModule
+  alias DiscordOauth2Server.Database
 
   plug(Plug.Logger, log: :debug)
   plug(:match)
@@ -12,11 +14,11 @@ defmodule DiscordOauth2Server.Router do
   get "/login" do
     case DiscordClient.get_referer conn do
       {:ok, referer, _} ->
-        state = DiscordClient.create_state
+        state = TokenModule.create_state
         TokenRequestCache.set_state_referer(state, referer)
 
         conn
-        |> put_resp_header("location", DiscordOauth2Server.DiscordClient.get_auth_url state)
+        |> put_resp_header("location", DiscordClient.get_auth_url state)
         |> send_resp(301, "Redirection")
 
 
@@ -39,17 +41,17 @@ defmodule DiscordOauth2Server.Router do
         {:not_found} ->
           return_error(conn, 401, "Request token not Found")
 
-        {:found, referer} ->
+        {:found, referer, _state} ->
           %URI{authority: referer_domain, scheme: referer_scheme} = URI.parse referer
 
-          case DiscordOauth2Server.DiscordClient.get_token code do
+          case DiscordClient.get_token code do
 
             %{access_token: access_token, refresh_token: _} ->
               TokenRequestCache.clear_state(state)
-              {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user(access_token)
+              {_, %{"id" => user_id}} = Poison.decode DiscordClient.get_user(access_token)
               {user_id, _} = Integer.parse user_id
-              user = DiscordOauth2Server.Database.fetch_guild_user(user_id, referer_domain)
-              {:ok, token, _} = DiscordClient.create_jwt(user, referer_domain)
+              user = Database.fetch_guild_user(user_id, referer_domain)
+              {:ok, token, _} = TokenModule.create_jwt(user, referer_domain)
 
               redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
 
@@ -57,7 +59,7 @@ defmodule DiscordOauth2Server.Router do
               |> put_resp_header("location", redirect_uri)
               |> send_resp(301, "Redirection")
 
-            %{error: reason} ->
+            %{error: _reason} ->
               return_error(conn, 401, "Server Error")
           end
         end

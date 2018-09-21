@@ -18,7 +18,7 @@ defmodule DiscordOauth2Server.Mixfile do
 
   def project do
     [app: :discord_oauth2_server,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.7",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -32,7 +32,7 @@ defmodule DiscordOauth2Server.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger, :postgrex, :cowboy, :plug, :poison],
+    [extra_applications: [:logger, :postgrex, :cowboy, :plug, :eex],
      mod: {DiscordOauth2Server.Application, []}]
   end
 
@@ -56,7 +56,7 @@ defmodule DiscordOauth2Server.Mixfile do
       {:jason, "~> 1.1"},
       {:joken, "~> 1.5.0"},
       {:guardian, "~> 1.1"},
-      {:distillery, "~> 1.5", runtime: false},
+      {:distillery, "~> 2.0", runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end

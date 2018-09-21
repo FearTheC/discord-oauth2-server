@@ -1,5 +1,4 @@
 defmodule DiscordOauth2Server.User do
-  alias __MODULE__
 
   @derive {Jason.Encoder, only: [:id, :username, :tag, :email, :roles]}
 

@@ -18,7 +18,7 @@ GROUP BY users.id, users.username, users.tag, users.email
     to_user columns, user
   end
 
-  def get_user(id) do
+  def get_user(_id) do
 
   end
 

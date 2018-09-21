@@ -3,9 +3,22 @@ defmodule DiscordOauth2Server.TokenModule do
 
   alias DiscordOauth2Server.User
   alias DiscordOauth2Server.Database
+  alias DiscordOauth2Server.TokenCache
 
   @config Application.get_env(:discord_oauth2_server, __MODULE__)
+  @length 24
 
+  def create_state do
+    :crypto.strong_rand_bytes(@length)
+      |> Base.url_encode64
+      |> binary_part(0, @length)
+  end
+
+  def create_jwt user, referer do
+    {:ok, jwt, claims} = encode_and_sign(user, [aud: referer])
+    TokenCache.set_new_token(jwt, claims["jti"])
+    {:ok, jwt, claims}
+  end
 
   def subject_for_token(%User{id: id}, _claims) do
     {:ok, "User:#{id}"}

@@ -1,6 +1,8 @@
 defmodule DiscordOauth2Server.DiscordClient do
-  alias DiscordOauth2Server.TokenModule
-  alias DiscordOauth2Server.TokenCache
+  @moduledoc """
+  Abstraction module reaching out to Discord API
+  It provides an easy way to fetch both the `access_token` and the current user
+  """
 
   def base_url, do: "https://discordapp.com/api"
   def token_uri, do: base_url() <> "/oauth2/token"
@@ -9,13 +11,6 @@ defmodule DiscordOauth2Server.DiscordClient do
   def redirect_uri, do: Application.get_env :discord_oauth2_server, :redirect_uri
   def client_id, do: Application.get_env :discord_oauth2_server, :client_id
   def client_secret, do: Application.get_env :discord_oauth2_server, :client_secret
-
-
-  def create_jwt user, referer do
-    {:ok, jwt, claims} = TokenModule.encode_and_sign(user, [aud: referer])
-    TokenCache.set_new_token(jwt, claims["jti"])
-    {:ok, jwt, claims}
-  end
 
 
   def get_referer conn do
@@ -28,13 +23,9 @@ defmodule DiscordOauth2Server.DiscordClient do
   end
 
 
-  def create_state do
-    length = 24
-    :crypto.strong_rand_bytes(length)
-      |> Base.url_encode64
-      |> binary_part(0, length)
-  end
-
+  @doc """
+  Returns the Discord Authorization URI to redirect the user to.
+  """
   def get_auth_url state do
     auth_url() <> "?client_id=" <> client_id() <> "&redirect_uri="<>redirect_uri()<>"&response_type=code&scope=identify+email&state="<>state
   end
