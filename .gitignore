@@ -1,5 +1,7 @@
 # The directory Mix will write compiled artifacts to.
 /_build
+/rel
+/priv
 
 # If you run "mix test --cover", coverage assets end up here.
 /cover
@@ -19,5 +21,6 @@ erl_crash.dump
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
 
+*.secret.*
 config/local.exs
 

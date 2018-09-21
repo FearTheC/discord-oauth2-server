@@ -1,12 +1,29 @@
 defmodule DiscordOauth2Server.Mixfile do
   use Mix.Project
 
+  defp description do
+    """
+    Server acting as a proxy for Discord OAuth2 service, providing JWS token for storage-less sessions
+    """
+  end
+
+  defp package do
+    [
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
+      maintainers: ["Quentin Bonaventure"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/fearthec/discord-oauth-server"}
+    ]
+  end
+
   def project do
     [app: :discord_oauth2_server,
      version: "0.1.0",
-     elixir: "~> 1.4",
+     elixir: "~> 1.7",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     description: description(),
+     package: package(),
      deps: deps()]
   end
 
@@ -37,8 +54,10 @@ defmodule DiscordOauth2Server.Mixfile do
       {:httpoison, "~> 1.0"},
       {:poolboy, "~> 1.5"},
       {:jason, "~> 1.1"},
-      {:joken, "~> 2.0-rc0"},
-      {:guardian, "~> 1.1"}
+      {:joken, "~> 1.5.0"},
+      {:guardian, "~> 1.1"},
+      {:distillery, "~> 1.5", runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 end

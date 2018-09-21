@@ -19,10 +19,9 @@ defmodule DiscordOauth2Server.Router do
         |> put_resp_header("location", DiscordOauth2Server.DiscordClient.get_auth_url state)
         |> send_resp(301, "Redirection")
 
-      {:error, err} ->
-        json = %{status: :error, error: err}
-          |> Jason.encode!
 
+      {:error, err} ->
+        json = %{status: :error, error: err} |> Jason.encode!
         conn
         |> put_resp_header("content-type", "application/json")
         |> send_resp(400, json)
@@ -32,31 +31,38 @@ defmodule DiscordOauth2Server.Router do
 
   get "/callback" do
     conn = Plug.Conn.fetch_query_params(conn)
-    params = conn.query_params
-    state = params["state"]
-    code = params["code"]
+    case conn.query_params do
+      %{"state" => state, "code" => code} ->
 
-    referer = TokenRequestCache.lookup_referer!(state)
-    %URI{authority: referer_domain, scheme: referer_scheme} = URI.parse referer
+      case TokenRequestCache.lookup_referer(state) do
 
-    case DiscordOauth2Server.DiscordClient.get_token code do
+        {:not_found} ->
+          return_error(conn, 401, "Request token not Found")
 
-      %{access_token: access_token, refresh_token: _} ->
-        TokenRequestCache.clear_state(state)
-        {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user(access_token)
-        {user_id, _} = Integer.parse user_id
-        user = DiscordOauth2Server.Database.fetch_guild_user(user_id, referer_domain)
-        {:ok, token, _} = DiscordClient.create_jwt(user, referer_domain)
+        {:found, referer} ->
+          %URI{authority: referer_domain, scheme: referer_scheme} = URI.parse referer
 
-        redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
+          case DiscordOauth2Server.DiscordClient.get_token code do
 
-        conn
-        |> put_resp_header("location", redirect_uri)
-        |> send_resp(301, "Redirection")
+            %{access_token: access_token, refresh_token: _} ->
+              TokenRequestCache.clear_state(state)
+              {_, %{"id" => user_id}} = Poison.decode DiscordOauth2Server.DiscordClient.get_user(access_token)
+              {user_id, _} = Integer.parse user_id
+              user = DiscordOauth2Server.Database.fetch_guild_user(user_id, referer_domain)
+              {:ok, token, _} = DiscordClient.create_jwt(user, referer_domain)
 
-      %{error: reason} ->
-        %{error: reason}
-        send_resp(conn, 401, "Server Error")
+              redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
+
+              conn
+              |> put_resp_header("location", redirect_uri)
+              |> send_resp(301, "Redirection")
+
+            %{error: reason} ->
+              return_error(conn, 401, "Server Error")
+          end
+        end
+      _ ->
+        return_error(conn, 400, "Missing parameter(s)")
     end
   end
 
@@ -86,12 +92,20 @@ defmodule DiscordOauth2Server.Router do
 
 
   match _ do
-    send_resp(conn, 404, "not founds")
+    return_error(conn, 404, "Not found")
   end
 
 
   def start_link do
     Plug.Adapters.Cowboy.http(Plugger.Router, [])
+  end
+
+
+  defp return_error(conn, code, msg) do
+    json = %{status: :error, reason: msg} |> Jason.encode!
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> send_resp(code, json)
   end
 
 

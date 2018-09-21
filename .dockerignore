@@ -1,0 +1,5 @@
+config/*.local.exs
+_build
+deps
+.*
+docker*
