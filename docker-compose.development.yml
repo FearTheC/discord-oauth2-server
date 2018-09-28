@@ -4,22 +4,12 @@ services:
   discord-oauth2-server:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-dev
     tty: true
     restart: always
     command: sh
-    environment:
-      - REPLACE_OS_VARS=true
-      - MIX_ENV=dev
-      - DB_HOSTNAME=core-db
-      - DB_NAME=discord_bot
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=password
-      - DISCORD_CLIENT_SECRET=
-      - DISCORD_CLIENT_ID=
-      - DISCORD_OAUTH_TOKEN_ISSUER=
-      - DISCORD_OAUTH_TOKEN_SECRET_KEY=AXhDP7S50AKGI5oYgIbjwCpzkzBq1iPuWWonStr0oAulP5gD5Yf-18XU-az3gpqz6CkpcU-2fpi8RwxhSkwxGR16
-      - REDIRECT_URI=
+    env_file:
+      - .env
     ports:
       - "8085:8085"
     volumes:

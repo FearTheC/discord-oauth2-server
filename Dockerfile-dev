@@ -1,0 +1,18 @@
+FROM elixir:1.7.3-alpine AS builder
+MAINTAINER Quentin Bonaventure <q.bonaventure@gmail.com>
+
+WORKDIR /app
+
+ENV MIX_ENV=dev
+
+RUN mix local.hex --force && \
+    mix local.rebar --force
+
+RUN apk --update --no-cache add openssl bash
+
+WORKDIR /app
+
+
+COPY . .
+
+CMD ["iex", "-S", "mix"]

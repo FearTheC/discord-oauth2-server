@@ -5,11 +5,11 @@ WORKDIR /app
 
 COPY . /app
 
-ENV MIX_ENV=prod
+ENV MIX_ENV=dev
 
 RUN mix local.hex --force && \
     mix local.rebar --force && \
-    mix deps.get --only prod && \
+    mix deps.get && \
     mix release
 
 
