@@ -50,7 +50,11 @@ defmodule DiscordOauth2Server.Router do
               TokenRequestCache.clear_state(state)
               {_, %{"id" => user_id}} = Poison.decode DiscordClient.get_user(access_token)
               {user_id, _} = Integer.parse user_id
-              user = Database.fetch_guild_user(user_id, referer_domain)
+              user =
+                case referer_domain do
+                  "platform-admin.ftcbot-dev.test" -> Database.fetch_user(user_id)
+                   _ -> Database.fetch_guild_user(user_id, referer_domain)
+                end
               {:ok, token, _} = TokenModule.create_jwt(user, referer_domain)
 
               redirect_uri = referer_scheme<>"://"<>referer_domain<>"/login_callback?token="<>token<>"&redirect_uri="<>referer
