@@ -80,6 +80,7 @@ defmodule DiscordOauth2Server.Router do
 
     conn
     |> put_resp_header("content-type", "application/json")
+    |> put_resp_header("Access-Control-Allow-Origin", "*")
     |> send_resp(200, json)
   end
 
